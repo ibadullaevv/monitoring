@@ -1,0 +1,67 @@
+global:
+  resolve_timeout: 5m
+
+# Xabar yuborish yo'llari
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'telegram'
+  routes:
+    # Critical alertlar darhol yuboriladi
+    - match:
+        severity: critical
+      receiver: 'telegram'
+      continue: true
+
+    # Warning alertlar 5 daqiqadan keyin yuboriladi
+    - match:
+        severity: warning
+      receiver: 'telegram'
+      group_wait: 5m
+
+# Xabar qabul qiluvchilar
+receivers:
+  # Telegram bot orqali xabar yuborish
+  - name: 'telegram'
+    telegram_configs:
+      - bot_token: '8368351747:AAHudvbjYXpBUCskimV35VKpjlN5mUzywhM'  # @BotFather dan oling
+        chat_id: 5710047851  # O'zingizning chat_id
+        parse_mode: 'HTML'
+        message: |
+          <b>{{ .GroupLabels.alertname }}</b>
+          
+          {{ range .Alerts }}
+          Status: {{ .Status }}
+          {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+          {{ end }}
+
+  # Email orqali xabar yuborish (opsional)
+  - name: 'email'
+    email_configs:
+      - to: 'sizning-email@example.com'
+        from: 'alertmanager@example.com'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: 'sizning-email@gmail.com'
+        auth_password: 'sizning-parol'
+        headers:
+          Subject: '🚨 Monitoring Alert'
+
+  # Slack orqali xabar yuborish (opsional)
+  - name: 'slack'
+    slack_configs:
+      - api_url: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL'
+        channel: '#monitoring'
+        title: 'Alert: {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+# Alertlarni o'chirish qoidalari
+inhibit_rules:
+  # Agar server down bo'lsa, boshqa alertlarni ko'rsatma
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['instance']

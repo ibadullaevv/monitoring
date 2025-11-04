@@ -1,0 +1,129 @@
+groups:
+  # Veb-sayt alertlar
+  - name: website_alerts
+    rules:
+      # Sayt ishlamayapti
+      - alert: WebsiteDown
+        expr: probe_success == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "⛔ Sayt ishlamayapti"
+          description: "{{ $labels.instance }} saytiga ulanib bo'lmayapti. 1 daqiqadan beri down."
+
+      # Sayt sekin ishlayapti
+      - alert: WebsiteSlowResponse
+        expr: probe_http_duration_seconds > 3
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "🐌 Sayt sekin ishlayapti"
+          description: "{{ $labels.instance }} javob vaqti {{ $value }}s. 3 sekunddan oshib ketgan."
+
+      # SSL sertifikat muddati tugaydi
+      - alert: SSLCertificateExpiringSoon
+        expr: (probe_ssl_earliest_cert_expiry - time()) / 86400 < 30
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "⚠️ SSL sertifikat muddati tugaydi"
+          description: "{{ $labels.instance }} SSL sertifikati {{ $value }} kundan keyin tugaydi."
+
+      # HTTP status kod xato
+      - alert: HTTPStatusError
+        expr: probe_http_status_code >= 400
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "❌ HTTP xato kodi"
+          description: "{{ $labels.instance }} HTTP {{ $value }} xato kodini qaytarmoqda."
+
+  # Server alertlar
+  - name: server_alerts
+    rules:
+      # Server ishlamayapti
+      - alert: ServerDown
+        expr: up{job="node-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "🚨 Server ishlamayapti"
+          description: "{{ $labels.instance }} serverga ulanib bo'lmayapti."
+
+      # CPU yuqori yuklanish
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "🔥 Yuqori CPU yuklanish"
+          description: "{{ $labels.instance }} serverda CPU {{ $value }}% yuklangan."
+
+      # Xotira kam qoldi
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "💾 Xotira kam qoldi"
+          description: "{{ $labels.instance }} serverda xotira {{ $value }}% band."
+
+      # Disk kam qoldi
+      - alert: LowDiskSpace
+        expr: (1 - (node_filesystem_avail_bytes{fstype!="tmpfs"} / node_filesystem_size_bytes{fstype!="tmpfs"})) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "💿 Disk bo'sh joy kam"
+          description: "{{ $labels.instance }} serverda {{ $labels.mountpoint }} disk {{ $value }}% to'lgan."
+
+      # Disk tez to'lmoqda
+      - alert: DiskFillingUp
+        expr: predict_linear(node_filesystem_avail_bytes{fstype!="tmpfs"}[1h], 4 * 3600) < 0
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "📈 Disk tez to'lmoqda"
+          description: "{{ $labels.instance }} serverda disk 4 soatdan keyin to'lishi mumkin."
+
+  # Docker container alertlar
+  - name: docker_alerts
+    rules:
+      # Container ishlamayapti
+      - alert: ContainerDown
+        expr: absent(container_last_seen{name!=""})
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "🐳 Container ishlamayapti"
+          description: "Docker container ko'rinmayapti."
+
+      # Container ko'p xotira ishlatmoqda
+      - alert: ContainerHighMemory
+        expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) * 100 > 90
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Docker container xotira yuqori"
+          description: "{{ $labels.name }} container {{ $value }}% xotira ishlatmoqda."
+
+      # Container ko'p CPU ishlatmoqda
+      - alert: ContainerHighCPU
+        expr: (rate(container_cpu_usage_seconds_total[5m])) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Docker container CPU yuqori"
+          description: "{{ $labels.name }} container {{ $value }}% CPU ishlatmoqda."
