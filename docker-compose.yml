@@ -19,8 +19,7 @@ services:
     container_name: nginx-proxy
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "8888:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/html:/usr/share/nginx/html:ro
@@ -44,7 +43,7 @@ services:
       - '--web.console.libraries=/etc/prometheus/console_libraries'
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--web.enable-lifecycle'
-      - '--web.external-url=http://monitoring.uz/prometheus'
+      - '--web.external-url=http://monitoring.urdu.uz/prometheus'
       - '--web.route-prefix=/'
     networks:
       - monitoring
@@ -61,7 +60,7 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin123
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_SERVER_ROOT_URL=http://monitoring.uz/grafana
+      - GF_SERVER_ROOT_URL=http://monitoring.urdu.uz/grafana
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
     networks:
       - monitoring
@@ -125,7 +124,7 @@ services:
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
-      - '--web.external-url=http://monitoring.uz/alertmanager'
+      - '--web.external-url=http://monitoring.urdu.uz/alertmanager'
       - '--web.route-prefix=/'
     networks:
       - monitoring
