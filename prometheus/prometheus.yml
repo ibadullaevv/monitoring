@@ -31,7 +31,7 @@ scrape_configs:
       - targets: ['83.222.7.86:9100']
         labels:
             instance: 'Kim-Tex server'
-      - targets: [ '195.158.31.106:9100' ]
+      - targets: [ '10.90.100.67:9100' ]
         labels:
           instance: 'Camera.urdu.uz server'
 
