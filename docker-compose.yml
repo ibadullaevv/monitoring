@@ -97,12 +97,14 @@ services:
     networks:
       - monitoring
 
-  # cAdvisor - Docker container monitoring
+# cAdvisor - Docker container monitoring
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
     restart: unless-stopped
     privileged: true
+    command:
+      - '--url_base_prefix=/cadvisor'
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
@@ -130,6 +132,17 @@ services:
     networks:
       - monitoring
 
+# Portainer - Docker UI boshqaruvi
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - monitoring
+
 networks:
   monitoring:
     driver: bridge
@@ -138,3 +151,4 @@ volumes:
   prometheus_data:
   grafana_data:
   alertmanager_data:
+  portainer_data:
