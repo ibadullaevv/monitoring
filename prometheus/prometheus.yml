@@ -28,6 +28,9 @@ scrape_configs:
       - targets: ['node-exporter:9100']
         labels:
           instance: 'server-1'
+      - targets: ['83.222.7.86:9100']
+        labels:
+            instance: 'Kim-Tex server'
 
   # Docker container monitoring (cAdvisor)
   - job_name: 'cadvisor'
